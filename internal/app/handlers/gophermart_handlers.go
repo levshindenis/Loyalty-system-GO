@@ -3,8 +3,8 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/storages"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/structs"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/tools"
 	"io"
 	"net/http"
@@ -15,7 +15,7 @@ type HStorage struct {
 }
 
 func (hs *HStorage) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	var user structs.User
+	var user models.User
 	var buf bytes.Buffer
 
 	if r.Header.Get("Content-Type") != "application/json" {
@@ -56,7 +56,7 @@ func (hs *HStorage) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hs *HStorage) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user structs.User
+	var user models.User
 	var buf bytes.Buffer
 
 	if r.Header.Get("Content-Type") != "application/json" {
@@ -102,22 +102,6 @@ func (hs *HStorage) MakeOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("UserID")
-	if err != nil {
-		http.Error(w, "Not cookie", http.StatusUnauthorized)
-		return
-	}
-
-	flag, err := hs.CheckCookie(cookie.Value)
-	if err != nil {
-		http.Error(w, "Something bad with check cookie", http.StatusInternalServerError)
-		return
-	}
-	if !flag {
-		http.Error(w, "Bad cookie", http.StatusUnauthorized)
-		return
-	}
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Something bad with read body", http.StatusInternalServerError)
@@ -125,9 +109,9 @@ func (hs *HStorage) MakeOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	flag, err = tools.IsLuna(string(body))
+	flag, err := tools.IsLuna(string(body))
 	if err != nil {
-		http.Error(w, "Something bad with Luna", http.StatusInternalServerError)
+		http.Error(w, "Something bad with IsLuna", http.StatusInternalServerError)
 		return
 	}
 	if !flag {
@@ -135,7 +119,9 @@ func (hs *HStorage) MakeOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fl1, fl2, err := hs.CheckOrder(string(body), cookie.Value)
+	cookie, _ := r.Cookie("UserID")
+
+	fl1, fl2, err := hs.CheckOrder(string(body), cookie.Value, "make")
 	if fl1 && !fl2 {
 		http.Error(w, "Order made other person", http.StatusConflict)
 		return
@@ -146,21 +132,7 @@ func (hs *HStorage) MakeOrderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hs *HStorage) GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("UserID")
-	if err != nil {
-		http.Error(w, "Not cookie", http.StatusUnauthorized)
-		return
-	}
-
-	flag, err := hs.CheckCookie(cookie.Value)
-	if err != nil {
-		http.Error(w, "Something bad with check cookie", http.StatusInternalServerError)
-		return
-	}
-	if !flag {
-		http.Error(w, "Bad cookie", http.StatusUnauthorized)
-		return
-	}
+	cookie, _ := r.Cookie("UserID")
 
 	isFilled, ordersData, err := hs.GetOrders(cookie.Value)
 	if err != nil {
@@ -187,21 +159,7 @@ func (hs *HStorage) GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hs *HStorage) CountPointsHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("UserID")
-	if err != nil {
-		http.Error(w, "Not cookie", http.StatusUnauthorized)
-		return
-	}
-
-	flag, err := hs.CheckCookie(cookie.Value)
-	if err != nil {
-		http.Error(w, "Something bad with check cookie", http.StatusInternalServerError)
-		return
-	}
-	if !flag {
-		http.Error(w, "Bad cookie", http.StatusUnauthorized)
-		return
-	}
+	cookie, _ := r.Cookie("UserID")
 
 	balanceData, err := hs.GetBalance(cookie.Value)
 	if err != nil {
@@ -224,48 +182,34 @@ func (hs *HStorage) CountPointsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hs *HStorage) DeductPointsHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("UserID")
-	if err != nil {
-		http.Error(w, "Not cookie", http.StatusUnauthorized)
-		return
-	}
-
-	flag, err := hs.CheckCookie(cookie.Value)
-	if err != nil {
-		http.Error(w, "Something bad with check cookie", http.StatusInternalServerError)
-		return
-	}
-	if !flag {
-		http.Error(w, "Bad cookie", http.StatusUnauthorized)
-		return
-	}
-
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "There is incorrect data format", http.StatusBadRequest)
 		return
 	}
 
-	var withdraw structs.Withdraw
+	var withdraw models.Withdraw
 	var buf bytes.Buffer
 
-	if _, err = buf.ReadFrom(r.Body); err != nil {
+	if _, err := buf.ReadFrom(r.Body); err != nil {
 		http.Error(w, "Something bad with read body", http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
-	if err = json.Unmarshal(buf.Bytes(), &withdraw); err != nil {
+	if err := json.Unmarshal(buf.Bytes(), &withdraw); err != nil {
 		http.Error(w, "Something bad with decoding JSON", http.StatusInternalServerError)
 		return
 	}
 
-	flag, err = tools.IsLuna(withdraw.OrderId)
+	cookie, _ := r.Cookie("UserID")
+
+	flag, _, err := hs.CheckOrder(withdraw.OrderId, cookie.Value, "check")
 	if err != nil {
-		http.Error(w, "Something bad with Luna", http.StatusInternalServerError)
+		http.Error(w, "Something bad with CheckOrder", http.StatusInternalServerError)
 		return
 	}
 	if !flag {
-		http.Error(w, "Failed the Luna test", http.StatusUnprocessableEntity)
+		http.Error(w, "Bad order value", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -281,21 +225,7 @@ func (hs *HStorage) DeductPointsHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (hs *HStorage) MovementPointsHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("UserID")
-	if err != nil {
-		http.Error(w, "Not cookie", http.StatusUnauthorized)
-		return
-	}
-
-	flag, err := hs.CheckCookie(cookie.Value)
-	if err != nil {
-		http.Error(w, "Something bad with check cookie", http.StatusInternalServerError)
-		return
-	}
-	if !flag {
-		http.Error(w, "Bad cookie", http.StatusUnauthorized)
-		return
-	}
+	cookie, _ := r.Cookie("UserID")
 
 	flag, outPointsData, err := hs.GetOutPoints(cookie.Value)
 	if err != nil {

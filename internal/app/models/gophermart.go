@@ -1,12 +1,12 @@
-package structs
+package models
 
 import "time"
 
 type Order struct {
-	OrderId    string  `json:"order_id"`
-	Status     string  `json:"status"`
-	Accrual    float32 `json:"accrual,omitempty"`
-	UploadedAt string  `json:"uploaded_at"`
+	OrderId    string   `json:"order_id"`
+	Status     string   `json:"status"`
+	Accrual    *float32 `json:"accrual,omitempty"`
+	UploadedAt string   `json:"uploaded_at"`
 }
 
 type Balance struct {
