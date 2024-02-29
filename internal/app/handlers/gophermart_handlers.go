@@ -3,11 +3,12 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/storages"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/tools"
-	"io"
-	"net/http"
 )
 
 type HStorage struct {

@@ -14,9 +14,13 @@ func (serv *ServerStorage) ParseFlags() {
 	serv.sc.ParseFlags()
 }
 
-func (serv *ServerStorage) Init() {
+func (serv *ServerStorage) Init() error {
 	serv.ds = DBStorage{address: serv.sc.GetDbURI()}
-	serv.ds.MakeDB()
+
+	if err := serv.ds.MakeDB(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (serv *ServerStorage) GetRunAddress() string {

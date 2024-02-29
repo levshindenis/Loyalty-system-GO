@@ -16,7 +16,9 @@ func main() {
 func run() error {
 	var hs handlers.HStorage
 	hs.ParseFlags()
-	hs.Init()
+	if err := hs.Init(); err != nil {
+		return err
+	}
 
 	return http.ListenAndServe(hs.GetRunAddress(), routers.GophermartRouter(hs))
 }

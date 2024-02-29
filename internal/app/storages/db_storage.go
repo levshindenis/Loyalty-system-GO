@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/tools"
 )
 
@@ -26,10 +26,10 @@ func (dbs *DBStorage) SetAddress(value string) {
 
 //
 
-func (dbs *DBStorage) MakeDB() {
+func (dbs *DBStorage) MakeDB() error {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
@@ -39,20 +39,22 @@ func (dbs *DBStorage) MakeDB() {
 	_, err = db.ExecContext(ctx,
 		`CREATE TABLE IF NOT EXISTS users(user_id text, login text, password text)`)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	_, err = db.ExecContext(ctx,
 		`CREATE TABLE IF NOT EXISTS orders(order_id text, user_id text, status text, accrual numeric, uploaded_at timestamp with time zone)`)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	_, err = db.ExecContext(ctx,
 		`CREATE TABLE IF NOT EXISTS balances(user_id text, balance numeric, withdrawn numeric)`)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 // User

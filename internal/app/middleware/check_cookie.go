@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/handlers"
 	"net/http"
+
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/handlers"
 )
 
 func CheckCookie(next http.HandlerFunc, hs handlers.HStorage) http.HandlerFunc {

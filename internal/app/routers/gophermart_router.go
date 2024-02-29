@@ -2,9 +2,9 @@ package routers
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/middleware"
 
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/handlers"
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/middleware"
 )
 
 func GophermartRouter(hs handlers.HStorage) *chi.Mux {
