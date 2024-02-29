@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 )
 
@@ -54,8 +53,4 @@ func (sa *ServerConfig) ParseFlags() {
 	if envAccSysAddr, in := os.LookupEnv("ACCRUAL_SYSTEM_ADDRESS"); in {
 		sa.SetAccSysAddr(envAccSysAddr)
 	}
-
-	fmt.Println("Run: ", sa.runAddr)
-	fmt.Println("URI: ", sa.dbURI)
-	fmt.Println("Acc: ", sa.accSysAddr)
 }

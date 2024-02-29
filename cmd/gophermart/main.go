@@ -1,16 +1,22 @@
 package main
 
 import (
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/config"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/routers"
 	"net/http"
+
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/handlers"
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/routers"
 )
 
 func main() {
-	var perem config.ServerConfig
-	perem.ParseFlags()
-
-	if err := http.ListenAndServe("localhost:8080", routers.MyRouter()); err != nil {
+	if err := run(); err != nil {
 		panic(err)
 	}
+}
+
+func run() error {
+	var hs handlers.HStorage
+	hs.ParseFlags()
+	hs.Init()
+
+	return http.ListenAndServe(hs.GetRunAddress(), routers.GophermartRouter(hs))
 }
