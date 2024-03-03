@@ -1,6 +1,7 @@
 package storages
 
 import (
+	"fmt"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/config"
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 )
@@ -20,6 +21,9 @@ func (serv *ServerStorage) Init() error {
 	if err := serv.ds.MakeDB(); err != nil {
 		return err
 	}
+
+	fmt.Println("What i need: ", serv.sc.GetAccSysAddr())
+
 	return nil
 }
 
@@ -47,7 +51,7 @@ func (serv *ServerStorage) GetBalance(userId string) (models.Balance, error) {
 	return serv.ds.GetBalance(userId)
 }
 
-func (serv *ServerStorage) CheckBalance(userId string, orderId string, orderSum float32) (bool, error) {
+func (serv *ServerStorage) CheckBalance(userId string, orderId string, orderSum float64) (bool, error) {
 	return serv.ds.CheckBalance(userId, orderId, orderSum)
 }
 

@@ -3,15 +3,15 @@ package models
 import "time"
 
 type Order struct {
-	OrderId    string   `json:"order_id"`
+	OrderId    string   `json:"number"`
 	Status     string   `json:"status"`
-	Accrual    *float32 `json:"accrual,omitempty"`
+	Accrual    *float64 `json:"accrual,omitempty"`
 	UploadedAt string   `json:"uploaded_at"`
 }
 
 type Balance struct {
-	Current   float32 `json:"current"`
-	WithDrawn float32 `json:"withdrawn"`
+	Current   float64 `json:"current"`
+	WithDrawn float64 `json:"withdrawn"`
 }
 
 type User struct {
@@ -21,11 +21,35 @@ type User struct {
 
 type Withdraw struct {
 	OrderId string  `json:"order"`
-	Summ    float32 `json:"sum"`
+	Summ    float64 `json:"sum"`
 }
 
 type OutPoints struct {
-	OrderId     string    `json:"order_id"`
-	Summ        float32   `json:"sum"`
+	OrderId     string    `json:"order"`
+	Summ        float64   `json:"sum"`
 	ProcessedAt time.Time `json:"processed_at"`
+}
+
+type AccrualOrder struct {
+	OrderID string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
+}
+
+// Для клиента
+
+type Product struct {
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+}
+
+type RegOrder struct {
+	OrderId  string    `json:"order"`
+	Products []Product `json:"goods"`
+}
+
+type Good struct {
+	Match      string  `json:"match"`
+	Reward     float64 `json:"reward"`
+	RewardType string  `json:"reward_type"`
 }

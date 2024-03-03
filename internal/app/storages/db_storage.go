@@ -246,7 +246,7 @@ func (dbs *DBStorage) GetBalance(userId string) (models.Balance, error) {
 	return item, nil
 }
 
-func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float32) (bool, error) {
+func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float64) (bool, error) {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
 		return false, err
