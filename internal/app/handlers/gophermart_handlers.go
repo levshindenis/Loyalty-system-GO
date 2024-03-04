@@ -40,7 +40,7 @@ func (hs *HStorage) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flag, userId, err := hs.CheckUser(user.Login, user.Password, "registration")
+	flag, userID, err := hs.CheckUser(user.Login, user.Password, "registration")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,7 +52,7 @@ func (hs *HStorage) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:  "UserID",
-		Value: userId,
+		Value: userID,
 	})
 }
 
@@ -81,7 +81,7 @@ func (hs *HStorage) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flag, userId, err := hs.CheckUser(user.Login, user.Password, "login")
+	flag, userID, err := hs.CheckUser(user.Login, user.Password, "login")
 	if err != nil {
 		http.Error(w, "Something bad with check user", http.StatusInternalServerError)
 		return
@@ -93,7 +93,7 @@ func (hs *HStorage) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:  "UserID",
-		Value: userId,
+		Value: userID,
 	})
 }
 
@@ -123,6 +123,10 @@ func (hs *HStorage) MakeOrderHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, _ := r.Cookie("UserID")
 
 	fl1, fl2, err := hs.CheckOrder(string(body), cookie.Value)
+	if err != nil {
+		http.Error(w, "Something bad with CheckOrder", http.StatusInternalServerError)
+		return
+	}
 	if fl1 && !fl2 {
 		http.Error(w, "Order made other person", http.StatusConflict)
 		return
@@ -204,7 +208,7 @@ func (hs *HStorage) DeductPointsHandler(w http.ResponseWriter, r *http.Request) 
 
 	cookie, _ := r.Cookie("UserID")
 
-	flag, err := tools.IsLuna(withdraw.OrderId)
+	flag, err := tools.IsLuna(withdraw.OrderID)
 	if err != nil {
 		http.Error(w, "Something bad with CheckOrder", http.StatusInternalServerError)
 		return
@@ -214,7 +218,7 @@ func (hs *HStorage) DeductPointsHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	flag, err = hs.CheckBalance(cookie.Value, withdraw.OrderId, withdraw.Summ)
+	flag, err = hs.CheckBalance(cookie.Value, withdraw.OrderID, withdraw.Summ)
 	if err != nil {
 		http.Error(w, "Something bad with CheckBalance", http.StatusInternalServerError)
 		return

@@ -15,7 +15,7 @@ func (sa *ServerConfig) GetRunAddress() string {
 	return sa.runAddr
 }
 
-func (sa *ServerConfig) GetDbURI() string {
+func (sa *ServerConfig) GetDBURI() string {
 	return sa.dbURI
 }
 
@@ -27,7 +27,7 @@ func (sa *ServerConfig) SetRunAddress(value string) {
 	sa.runAddr = value
 }
 
-func (sa *ServerConfig) SetDbURI(value string) {
+func (sa *ServerConfig) SetDBURI(value string) {
 	sa.dbURI = value
 }
 
@@ -46,8 +46,8 @@ func (sa *ServerConfig) ParseFlags() {
 		sa.SetRunAddress(envRunAddr)
 	}
 
-	if envDbURI, in := os.LookupEnv("DATABASE_URI"); in {
-		sa.SetDbURI(envDbURI)
+	if envDBURI, in := os.LookupEnv("DATABASE_URI"); in {
+		sa.SetDBURI(envDBURI)
 	}
 
 	if envAccSysAddr, in := os.LookupEnv("ACCRUAL_SYSTEM_ADDRESS"); in {

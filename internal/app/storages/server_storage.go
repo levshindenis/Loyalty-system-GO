@@ -20,7 +20,7 @@ func (serv *ServerStorage) ParseFlags() {
 }
 
 func (serv *ServerStorage) Init() error {
-	serv.ds = DBStorage{address: serv.sc.GetDbURI()}
+	serv.ds = DBStorage{address: serv.sc.GetDBURI()}
 
 	if err := serv.ds.MakeDB(); err != nil {
 		return err
@@ -29,7 +29,7 @@ func (serv *ServerStorage) Init() error {
 	serv.fromDB = models.NewQueue()
 	serv.toDB = models.NewQueue()
 
-	go serv.FromDbToChannel(&serv.fromDB)
+	go serv.FromDBToChannel(&serv.fromDB)
 
 	m := sync.Mutex{}
 	c := sync.NewCond(&m)
@@ -38,7 +38,7 @@ func (serv *ServerStorage) Init() error {
 		go w.Loop()
 	}
 
-	go serv.FromChannelToDb(&serv.toDB)
+	go serv.FromChannelToDB(&serv.toDB)
 
 	return nil
 }
@@ -59,27 +59,27 @@ func (serv *ServerStorage) CheckCookie(cookie string) (bool, error) {
 	return serv.ds.CheckCookie(cookie)
 }
 
-func (serv *ServerStorage) CheckOrder(orderId string, userId string) (bool, bool, error) {
-	return serv.ds.CheckOrder(orderId, userId)
+func (serv *ServerStorage) CheckOrder(orderID string, userID string) (bool, bool, error) {
+	return serv.ds.CheckOrder(orderID, userID)
 }
 
-func (serv *ServerStorage) GetOrders(userId string) (bool, []models.Order, error) {
-	return serv.ds.GetOrders(userId)
+func (serv *ServerStorage) GetOrders(userID string) (bool, []models.Order, error) {
+	return serv.ds.GetOrders(userID)
 }
 
-func (serv *ServerStorage) GetBalance(userId string) (models.Balance, error) {
-	return serv.ds.GetBalance(userId)
+func (serv *ServerStorage) GetBalance(userID string) (models.Balance, error) {
+	return serv.ds.GetBalance(userID)
 }
 
-func (serv *ServerStorage) CheckBalance(userId string, orderId string, orderSum float64) (bool, error) {
-	return serv.ds.CheckBalance(userId, orderId, orderSum)
+func (serv *ServerStorage) CheckBalance(userID string, orderID string, orderSum float64) (bool, error) {
+	return serv.ds.CheckBalance(userID, orderID, orderSum)
 }
 
-func (serv *ServerStorage) GetOutPoints(userId string) (bool, []models.OutPoints, error) {
-	return serv.ds.GetOutPoints(userId)
+func (serv *ServerStorage) GetOutPoints(userID string) (bool, []models.OutPoints, error) {
+	return serv.ds.GetOutPoints(userID)
 }
 
-func (serv *ServerStorage) FromDbToChannel(q *models.Queue) {
+func (serv *ServerStorage) FromDBToChannel(q *models.Queue) {
 	ticker := time.NewTicker(4 * time.Second)
 
 	for {
@@ -99,7 +99,7 @@ func (serv *ServerStorage) FromDbToChannel(q *models.Queue) {
 	}
 }
 
-func (serv *ServerStorage) FromChannelToDb(q *models.Queue) {
+func (serv *ServerStorage) FromChannelToDB(q *models.Queue) {
 	ticker := time.NewTicker(2 * time.Second)
 
 	var values []models.Task

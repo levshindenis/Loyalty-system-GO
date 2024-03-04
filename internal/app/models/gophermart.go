@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Order struct {
-	OrderId    string   `json:"number"`
+	OrderID    string   `json:"number"`
 	Status     string   `json:"status"`
 	Accrual    *float64 `json:"accrual,omitempty"`
 	UploadedAt string   `json:"uploaded_at"`
@@ -20,12 +20,12 @@ type User struct {
 }
 
 type Withdraw struct {
-	OrderId string  `json:"order"`
+	OrderID string  `json:"order"`
 	Summ    float64 `json:"sum"`
 }
 
 type OutPoints struct {
-	OrderId     string    `json:"order"`
+	OrderID     string    `json:"order"`
 	Summ        float64   `json:"sum"`
 	ProcessedAt time.Time `json:"processed_at"`
 }
@@ -38,7 +38,7 @@ type Product struct {
 }
 
 type RegOrder struct {
-	OrderId  string    `json:"order"`
+	OrderID  string    `json:"order"`
 	Products []Product `json:"goods"`
 }
 

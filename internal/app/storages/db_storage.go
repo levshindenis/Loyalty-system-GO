@@ -70,9 +70,9 @@ func (dbs *DBStorage) CheckUser(login string, password string, param string) (bo
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var userId, pswrd string
+	var userID, pswrd string
 	err = db.QueryRowContext(ctx,
-		`SELECT user_id, password FROM users WHERE login = $1`, login).Scan(&userId, &pswrd)
+		`SELECT user_id, password FROM users WHERE login = $1`, login).Scan(&userID, &pswrd)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			if param == "registration" {
@@ -123,7 +123,7 @@ func (dbs *DBStorage) CheckUser(login string, password string, param string) (bo
 		}
 	}
 
-	return true, userId, nil
+	return true, userID, nil
 }
 
 // Cookie
@@ -138,9 +138,9 @@ func (dbs *DBStorage) CheckCookie(cookie string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var userId string
+	var userID string
 	err = db.QueryRowContext(ctx,
-		`SELECT user_id FROM users WHERE user_id = $1`, cookie).Scan(&userId)
+		`SELECT user_id FROM users WHERE user_id = $1`, cookie).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -153,7 +153,7 @@ func (dbs *DBStorage) CheckCookie(cookie string) (bool, error) {
 
 // Order
 
-func (dbs *DBStorage) CheckOrder(orderId string, userId string) (bool, bool, error) {
+func (dbs *DBStorage) CheckOrder(orderID string, userID string) (bool, bool, error) {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
 		return false, false, err
@@ -165,29 +165,29 @@ func (dbs *DBStorage) CheckOrder(orderId string, userId string) (bool, bool, err
 
 	var uid string
 	err = db.QueryRowContext(ctx,
-		`SELECT user_id FROM orders WHERE order_id = $1`, orderId).Scan(&uid)
+		`SELECT user_id FROM orders WHERE order_id = $1`, orderID).Scan(&uid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			_, err = db.ExecContext(ctx,
 				`INSERT INTO orders (order_id, user_id, status, accrual, uploaded_at) values ($1, $2, $3, $4, $5)`,
-				orderId, userId, "NEW", nil, time.Now().Format(time.RFC3339))
+				orderID, userID, "NEW", nil, time.Now().Format(time.RFC3339))
 			if err != nil {
 				return false, false, err
 			}
-			uid = userId
+			uid = userID
 			return false, false, nil
 		} else {
 			return false, false, err
 		}
 	}
 
-	if uid == userId {
+	if uid == userID {
 		return true, true, nil
 	}
 	return true, false, nil
 }
 
-func (dbs *DBStorage) GetOrders(userId string) (bool, []models.Order, error) {
+func (dbs *DBStorage) GetOrders(userID string) (bool, []models.Order, error) {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
 		return false, nil, err
@@ -200,7 +200,7 @@ func (dbs *DBStorage) GetOrders(userId string) (bool, []models.Order, error) {
 	rows, err := db.QueryContext(ctx,
 		`SELECT order_id, status, accrual, uploaded_at FROM orders 
             WHERE user_id = $1 and status <> 'SOLD' order by uploaded_at desc`,
-		userId)
+		userID)
 	if err != nil {
 		return false, nil, err
 	}
@@ -208,7 +208,7 @@ func (dbs *DBStorage) GetOrders(userId string) (bool, []models.Order, error) {
 	var items []models.Order
 	for rows.Next() {
 		var item models.Order
-		if err = rows.Scan(&item.OrderId, &item.Status, &item.Accrual, &item.UploadedAt); err != nil {
+		if err = rows.Scan(&item.OrderID, &item.Status, &item.Accrual, &item.UploadedAt); err != nil {
 			return false, nil, err
 		}
 		items = append(items, item)
@@ -226,7 +226,7 @@ func (dbs *DBStorage) GetOrders(userId string) (bool, []models.Order, error) {
 
 // Balance
 
-func (dbs *DBStorage) GetBalance(userId string) (models.Balance, error) {
+func (dbs *DBStorage) GetBalance(userID string) (models.Balance, error) {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
 		return models.Balance{}, err
@@ -238,14 +238,14 @@ func (dbs *DBStorage) GetBalance(userId string) (models.Balance, error) {
 
 	var item models.Balance
 	err = db.QueryRowContext(ctx,
-		`SELECT balance, withdrawn FROM balances WHERE user_id = $1`, userId).Scan(&item.Current, &item.WithDrawn)
+		`SELECT balance, withdrawn FROM balances WHERE user_id = $1`, userID).Scan(&item.Current, &item.WithDrawn)
 	if err != nil {
 		return models.Balance{}, err
 	}
 	return item, nil
 }
 
-func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float64) (bool, error) {
+func (dbs *DBStorage) CheckBalance(userID string, orderID string, orderSum float64) (bool, error) {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
 		return false, err
@@ -257,7 +257,7 @@ func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float
 
 	var balance float64
 	err = db.QueryRowContext(ctx,
-		`SELECT balance FROM balances WHERE user_id = $1`, userId).Scan(&balance)
+		`SELECT balance FROM balances WHERE user_id = $1`, userID).Scan(&balance)
 	if err != nil {
 		return false, err
 	}
@@ -273,7 +273,7 @@ func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float
 
 	_, err = tx.ExecContext(ctx,
 		`INSERT INTO orders (order_id, user_id, status, accrual, uploaded_at) values ($1, $2, $3, $4, $5)`,
-		orderId, userId, "SOLD", orderSum, time.Now().Format(time.RFC3339))
+		orderID, userID, "SOLD", orderSum, time.Now().Format(time.RFC3339))
 	if err != nil {
 		tx.Rollback()
 		return false, err
@@ -281,7 +281,7 @@ func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float
 
 	_, err = tx.ExecContext(ctx,
 		`UPDATE balances SET balance = balance - $1, withdrawn = withdrawn + $1 WHERE user_id = $2`,
-		orderSum, userId)
+		orderSum, userID)
 	if err != nil {
 		tx.Rollback()
 		return false, err
@@ -292,7 +292,7 @@ func (dbs *DBStorage) CheckBalance(userId string, orderId string, orderSum float
 
 // Out_points
 
-func (dbs *DBStorage) GetOutPoints(userId string) (bool, []models.OutPoints, error) {
+func (dbs *DBStorage) GetOutPoints(userID string) (bool, []models.OutPoints, error) {
 	db, err := sql.Open("pgx", dbs.GetAddress())
 	if err != nil {
 		return false, nil, err
@@ -305,7 +305,7 @@ func (dbs *DBStorage) GetOutPoints(userId string) (bool, []models.OutPoints, err
 	rows, err := db.QueryContext(ctx,
 		`SELECT order_id, accrual, uploaded_at FROM orders 
             WHERE user_id = $1 and status = 'SOLD' order by uploaded_at desc`,
-		userId)
+		userID)
 	if err != nil {
 		return false, nil, err
 	}
@@ -313,7 +313,7 @@ func (dbs *DBStorage) GetOutPoints(userId string) (bool, []models.OutPoints, err
 	var items []models.OutPoints
 	for rows.Next() {
 		var item models.OutPoints
-		if err = rows.Scan(&item.OrderId, &item.Summ, &item.ProcessedAt); err != nil {
+		if err = rows.Scan(&item.OrderID, &item.Summ, &item.ProcessedAt); err != nil {
 			return false, nil, err
 		}
 		items = append(items, item)
@@ -350,7 +350,7 @@ func (dbs *DBStorage) GetNewOrders() ([]models.Task, error) {
 	var items []models.Task
 	for rows.Next() {
 		var item models.Task
-		if err = rows.Scan(&item.OrderId, &item.Status, &item.Accrual); err != nil {
+		if err = rows.Scan(&item.OrderID, &item.Status, &item.Accrual); err != nil {
 			return nil, err
 		}
 		items = append(items, item)
@@ -381,22 +381,22 @@ func (dbs *DBStorage) UpdateOrders(tasks []models.Task) error {
 	for _, task := range tasks {
 		_, err = tx.ExecContext(ctx,
 			`UPDATE orders SET status = $1, accrual = $2, uploaded_at = $3 WHERE order_id = $4`,
-			task.Status, *task.Accrual, time.Now().Format(time.RFC3339), task.OrderId)
+			task.Status, *task.Accrual, time.Now().Format(time.RFC3339), task.OrderID)
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
 
-		var userId string
+		var userID string
 		err = tx.QueryRowContext(ctx,
-			`SELECT user_id FROM orders WHERE order_id = $1`, task.OrderId).Scan(&userId)
+			`SELECT user_id FROM orders WHERE order_id = $1`, task.OrderID).Scan(&userID)
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
 
 		_, err = tx.ExecContext(ctx,
-			`UPDATE balances SET balance = balance + $1 WHERE user_id = $2`, *task.Accrual, userId)
+			`UPDATE balances SET balance = balance + $1 WHERE user_id = $2`, *task.Accrual, userID)
 		if err != nil {
 			tx.Rollback()
 			return err

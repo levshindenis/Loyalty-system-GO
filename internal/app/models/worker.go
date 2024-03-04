@@ -33,7 +33,7 @@ func (cw *CompareWorker) Loop() {
 
 		t := cw.queue1.Pop()
 
-		resp, err := http.Get(cw.address + "/api/orders/" + t.OrderId)
+		resp, err := http.Get(cw.address + "/api/orders/" + t.OrderID)
 		if err != nil {
 			panic(err)
 		}
@@ -53,7 +53,7 @@ func (cw *CompareWorker) Loop() {
 
 			if task.Status != t.Status {
 				if task.Status == "REGISTERED" {
-					cw.queue2.Push(NewTask(task.OrderId, "PROCESSING", task.Accrual))
+					cw.queue2.Push(NewTask(task.OrderID, "PROCESSING", task.Accrual))
 				} else {
 					cw.queue2.Push(task)
 				}
@@ -61,6 +61,9 @@ func (cw *CompareWorker) Loop() {
 		} else if resp.StatusCode == 204 {
 			continue
 		} else {
+			// Пытаюсь заблокировать worker на минуту, чтобы подождать таймаут
+			// (при большем, чем N количестве запросов, может вернуться, что превышен лимит. Пытаюсь переждать минуту)
+			// Это скорее всего неправильно. Хотел бы получить уточнение по этому моменту.
 			cw.cond.L.Lock()
 			cw.cond.Wait()
 			timer := time.NewTimer(60 * time.Second)

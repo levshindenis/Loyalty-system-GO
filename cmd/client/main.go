@@ -230,7 +230,7 @@ func SetWithdraw(client *resty.Client, cookie string) error {
 	fmt.Println("Введите сумму списания:")
 	fmt.Scanf("%f\n", &summ)
 
-	withDraw := models.Withdraw{OrderId: order, Summ: summ}
+	withDraw := models.Withdraw{OrderID: order, Summ: summ}
 
 	jsonWD, err := json.Marshal(withDraw)
 	if err != nil {
@@ -272,7 +272,7 @@ func GetWithdrawals(client *resty.Client, cookie string) error {
 //
 
 func SetOrder(client *resty.Client) error {
-	var orderId, name string
+	var orderID, name string
 	var prices []float64
 	var percentages []float64
 
@@ -285,7 +285,7 @@ func SetOrder(client *resty.Client) error {
 	}
 
 	fmt.Println("Номер заказа:")
-	fmt.Scanf("%s\n", &orderId)
+	fmt.Scanf("%s\n", &orderID)
 	fmt.Println("Название товара:")
 	fmt.Scanf("%s\n", &name)
 
@@ -304,7 +304,7 @@ func SetOrder(client *resty.Client) error {
 	product := models.Product{Description: name, Price: randPrice}
 	products := []models.Product{product}
 
-	regOrder := models.RegOrder{OrderId: orderId, Products: products}
+	regOrder := models.RegOrder{OrderID: orderID, Products: products}
 
 	jsonGood, err := json.Marshal(good)
 	if err != nil {
