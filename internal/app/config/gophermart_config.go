@@ -38,7 +38,7 @@ func (sa *ServerConfig) SetAccSysAddr(value string) {
 func (sa *ServerConfig) ParseFlags() {
 	flag.StringVar(&sa.runAddr, "a", "localhost:8000", "address and port to run shortener")
 	flag.StringVar(&sa.dbURI, "d", "", "db address")
-	flag.StringVar(&sa.accSysAddr, "r", "localhost:8080", "accrual system address")
+	flag.StringVar(&sa.accSysAddr, "r", "http://localhost:8080", "accrual system address")
 
 	flag.Parse()
 

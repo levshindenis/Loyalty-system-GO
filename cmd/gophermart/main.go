@@ -8,17 +8,19 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	var hs handlers.HStorage
+	if err := initHS(&hs); err != nil {
+		panic(err)
+	}
+	if err := http.ListenAndServe(hs.GetRunAddress(), routers.GophermartRouter(hs)); err != nil {
 		panic(err)
 	}
 }
 
-func run() error {
-	var hs handlers.HStorage
+func initHS(hs *handlers.HStorage) error {
 	hs.ParseFlags()
 	if err := hs.Init(); err != nil {
 		return err
 	}
-
-	return http.ListenAndServe(hs.GetRunAddress(), routers.GophermartRouter(hs))
+	return nil
 }

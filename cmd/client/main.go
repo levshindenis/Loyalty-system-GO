@@ -228,11 +228,11 @@ func SetWithdraw(client *resty.Client, cookie string) error {
 	fmt.Println("Введите номер заказа:")
 	fmt.Scanf("%s\n", &order)
 	fmt.Println("Введите сумму списания:")
-	fmt.Scanf("%s\n", &summ)
+	fmt.Scanf("%f\n", &summ)
 
 	withDraw := models.Withdraw{OrderId: order, Summ: summ}
 
-	jsonWD, err := json.MarshalIndent(withDraw, "", "    ")
+	jsonWD, err := json.Marshal(withDraw)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func SetOrder(client *resty.Client) error {
 	var percentages []float64
 
 	for i := 1; i <= 5; i++ {
-		prices = append(prices, float64(i*1000))
+		prices = append(prices, float64(i*11))
 	}
 
 	for i := 1; i <= 5; i++ {

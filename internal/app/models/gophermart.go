@@ -30,12 +30,6 @@ type OutPoints struct {
 	ProcessedAt time.Time `json:"processed_at"`
 }
 
-type AccrualOrder struct {
-	OrderID string  `json:"order"`
-	Status  string  `json:"status"`
-	Accrual float64 `json:"accrual"`
-}
-
 // Для клиента
 
 type Product struct {

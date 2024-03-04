@@ -122,7 +122,7 @@ func (hs *HStorage) MakeOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	cookie, _ := r.Cookie("UserID")
 
-	fl1, fl2, err := hs.CheckOrder(string(body), cookie.Value, "make")
+	fl1, fl2, err := hs.CheckOrder(string(body), cookie.Value)
 	if fl1 && !fl2 {
 		http.Error(w, "Order made other person", http.StatusConflict)
 		return
@@ -204,7 +204,7 @@ func (hs *HStorage) DeductPointsHandler(w http.ResponseWriter, r *http.Request) 
 
 	cookie, _ := r.Cookie("UserID")
 
-	flag, _, err := hs.CheckOrder(withdraw.OrderId, cookie.Value, "check")
+	flag, err := tools.IsLuna(withdraw.OrderId)
 	if err != nil {
 		http.Error(w, "Something bad with CheckOrder", http.StatusInternalServerError)
 		return
