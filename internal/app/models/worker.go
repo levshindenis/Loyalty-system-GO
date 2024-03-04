@@ -67,11 +67,8 @@ func (cw *CompareWorker) Loop() {
 			cw.cond.L.Lock()
 			cw.cond.Wait()
 			timer := time.NewTimer(60 * time.Second)
-
-			select {
-			case <-timer.C:
-				cw.cond.Signal()
-			}
+			<-timer.C
+			cw.cond.Signal()
 			cw.cond.L.Unlock()
 		}
 

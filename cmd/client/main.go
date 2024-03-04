@@ -8,13 +8,13 @@ import (
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 	"math/rand"
 	"net/http"
-	"os"
 	"time"
 )
 
 func main() {
 	cookVal := ""
 
+out:
 	for {
 		var choice string
 		client := resty.New()
@@ -69,7 +69,7 @@ func main() {
 				panic(err)
 			}
 		default:
-			os.Exit(1)
+			break out
 		}
 
 		Exit()
@@ -78,7 +78,7 @@ func main() {
 
 		switch choice {
 		case "1":
-			os.Exit(0)
+			break out
 		default:
 			fmt.Println()
 			continue

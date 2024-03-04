@@ -8,9 +8,9 @@ type Task struct {
 	Accrual *float64 `json:"accrual"`
 }
 
-func NewTask(orderId string, status string, accrual *float64) Task {
+func NewTask(orderID string, status string, accrual *float64) Task {
 	return Task{
-		OrderID: orderId,
+		OrderID: orderID,
 		Status:  status,
 		Accrual: accrual,
 	}
