@@ -15,6 +15,7 @@ func main() {
 	if err := http.ListenAndServe(hs.GetRunAddress(), routers.GophermartRouter(hs)); err != nil {
 		panic(err)
 	}
+	hs.Terminate()
 }
 
 func initHS(hs *handlers.HStorage) error {

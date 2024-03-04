@@ -43,12 +43,13 @@ func (serv *ServerStorage) Init() error {
 	return nil
 }
 
-func (serv *ServerStorage) GetRunAddress() string {
-	return serv.sc.GetRunAddress()
+func (serv *ServerStorage) Terminate() {
+	serv.fromDB.Push(models.Task{})
+	serv.toDB.Push(models.Task{})
 }
 
-func (serv *ServerStorage) SetDBAddress(value string) {
-	serv.ds.SetAddress(value)
+func (serv *ServerStorage) GetRunAddress() string {
+	return serv.sc.GetRunAddress()
 }
 
 func (serv *ServerStorage) CheckUser(login string, password string, param string) (bool, string, error) {

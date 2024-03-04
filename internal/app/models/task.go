@@ -1,7 +1,5 @@
 package models
 
-import "fmt"
-
 type Task struct {
 	OrderID string   `json:"order"`
 	Status  string   `json:"status"`
@@ -14,8 +12,4 @@ func NewTask(orderID string, status string, accrual *float64) Task {
 		Status:  status,
 		Accrual: accrual,
 	}
-}
-
-func (t *Task) String() {
-	fmt.Println(t.OrderID + "  " + t.Status)
 }

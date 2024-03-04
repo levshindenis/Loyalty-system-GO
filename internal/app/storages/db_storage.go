@@ -21,10 +21,6 @@ func (dbs *DBStorage) GetAddress() string {
 	return dbs.address
 }
 
-func (dbs *DBStorage) SetAddress(value string) {
-	dbs.address = value
-}
-
 //
 
 func (dbs *DBStorage) MakeDB() error {

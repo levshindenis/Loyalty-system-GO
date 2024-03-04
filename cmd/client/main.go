@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 )
 
 func main() {
