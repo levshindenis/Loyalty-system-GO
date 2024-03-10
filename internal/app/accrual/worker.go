@@ -1,8 +1,10 @@
-package models
+package accrual
 
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
+	"go.uber.org/zap"
 	"net/http"
 	"sync"
 	"time"
@@ -10,13 +12,13 @@ import (
 
 type CompareWorker struct {
 	id      int
-	queue1  Queue
-	queue2  Queue
+	queue1  models.Queue
+	queue2  models.Queue
 	address string
 	cond    *sync.Cond
 }
 
-func NewCompareWorker(id int, queue1 Queue, queue2 Queue, address string, cond *sync.Cond) CompareWorker {
+func NewCompareWorker(id int, queue1 models.Queue, queue2 models.Queue, address string, cond *sync.Cond) CompareWorker {
 	return CompareWorker{
 		id:      id,
 		queue1:  queue1,
@@ -26,34 +28,50 @@ func NewCompareWorker(id int, queue1 Queue, queue2 Queue, address string, cond *
 	}
 }
 
-func (cw *CompareWorker) Loop() {
+func (cw *CompareWorker) Loop(sugarLogger *zap.SugaredLogger) {
 	for {
 		var buf bytes.Buffer
-		var task Task
+		var task models.Task
 
 		t := cw.queue1.Pop()
 
 		resp, err := http.Get(cw.address + "/api/orders/" + t.OrderID)
 		if err != nil {
-			panic(err)
+			sugarLogger.Infoln(
+				"time", time.Now().Format(time.RFC3339),
+				"error", "Error with http.Get",
+			)
+			continue
 		}
 
 		if resp.StatusCode == 200 {
 			if _, err = buf.ReadFrom(resp.Body); err != nil {
-				panic(err)
+				sugarLogger.Infoln(
+					"time", time.Now().Format(time.RFC3339),
+					"error", "Error with read body",
+				)
+				continue
 			}
 
 			if err = resp.Body.Close(); err != nil {
-				panic(err)
+				sugarLogger.Infoln(
+					"time", time.Now().Format(time.RFC3339),
+					"error", "Error with close body",
+				)
+				continue
 			}
 
 			if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-				panic(err)
+				sugarLogger.Infoln(
+					"time", time.Now().Format(time.RFC3339),
+					"error", "Error with Unmarshal",
+				)
+				continue
 			}
 
 			if task.Status != t.Status {
 				if task.Status == "REGISTERED" {
-					cw.queue2.Push(NewTask(task.OrderID, "PROCESSING", task.Accrual))
+					cw.queue2.Push(models.NewTask(task.OrderID, "PROCESSING", task.Accrual))
 				} else {
 					cw.queue2.Push(task)
 				}

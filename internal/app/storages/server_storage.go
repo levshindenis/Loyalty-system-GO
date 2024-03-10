@@ -2,15 +2,19 @@ package storages
 
 import (
 	"fmt"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/config"
-	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/accrual"
+	"go.uber.org/zap"
 	"sync"
 	"time"
+
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/config"
+	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 )
 
 type ServerStorage struct {
 	sc     config.ServerConfig
-	ds     DBStorage
+	sd     ServerData
+	sl     zap.SugaredLogger
 	fromDB models.Queue
 	toDB   models.Queue
 }
@@ -19,12 +23,26 @@ func (serv *ServerStorage) ParseFlags() {
 	serv.sc.ParseFlags()
 }
 
-func (serv *ServerStorage) Init() error {
-	serv.ds = DBStorage{address: serv.sc.GetDBURI()}
+func (serv *ServerStorage) InitLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
 
-	if err := serv.ds.MakeDB(); err != nil {
+	serv.sl = *logger.Sugar()
+}
+
+func (serv *ServerStorage) Init() error {
+	db := DBStorage{address: serv.sc.GetDBURI()}
+
+	if err := db.MakeDB(); err != nil {
 		return err
 	}
+
+	serv.sd = ServerData{data: &db}
+
+	serv.InitLogger()
 
 	serv.fromDB = models.NewQueue()
 	serv.toDB = models.NewQueue()
@@ -34,8 +52,8 @@ func (serv *ServerStorage) Init() error {
 	m := sync.Mutex{}
 	c := sync.NewCond(&m)
 	for i := 0; i < 5; i++ {
-		w := models.NewCompareWorker(i, serv.fromDB, serv.toDB, serv.sc.GetAccSysAddr(), c)
-		go w.Loop()
+		w := accrual.NewCompareWorker(i, serv.fromDB, serv.toDB, serv.sc.GetAccSysAddr(), c)
+		go w.Loop(&serv.sl)
 	}
 
 	go serv.FromChannelToDB(&serv.toDB)
@@ -44,8 +62,8 @@ func (serv *ServerStorage) Init() error {
 }
 
 func (serv *ServerStorage) Terminate() {
-	serv.fromDB.Push(models.Task{})
-	serv.toDB.Push(models.Task{})
+	serv.fromDB.GetCtx().Done()
+	serv.toDB.GetCtx().Done()
 }
 
 func (serv *ServerStorage) GetRunAddress() string {
@@ -53,31 +71,31 @@ func (serv *ServerStorage) GetRunAddress() string {
 }
 
 func (serv *ServerStorage) CheckUser(login string, password string, param string) (bool, string, error) {
-	return serv.ds.CheckUser(login, password, param)
+	return serv.sd.data.CheckUser(login, password, param)
 }
 
 func (serv *ServerStorage) CheckCookie(cookie string) (bool, error) {
-	return serv.ds.CheckCookie(cookie)
+	return serv.sd.data.CheckCookie(cookie)
 }
 
 func (serv *ServerStorage) CheckOrder(orderID string, userID string) (bool, bool, error) {
-	return serv.ds.CheckOrder(orderID, userID)
+	return serv.sd.data.CheckOrder(orderID, userID)
 }
 
 func (serv *ServerStorage) GetOrders(userID string) (bool, []models.Order, error) {
-	return serv.ds.GetOrders(userID)
+	return serv.sd.data.GetOrders(userID)
 }
 
 func (serv *ServerStorage) GetBalance(userID string) (models.Balance, error) {
-	return serv.ds.GetBalance(userID)
+	return serv.sd.data.GetBalance(userID)
 }
 
 func (serv *ServerStorage) CheckBalance(userID string, orderID string, orderSum float64) (bool, error) {
-	return serv.ds.CheckBalance(userID, orderID, orderSum)
+	return serv.sd.data.CheckBalance(userID, orderID, orderSum)
 }
 
 func (serv *ServerStorage) GetOutPoints(userID string) (bool, []models.OutPoints, error) {
-	return serv.ds.GetOutPoints(userID)
+	return serv.sd.data.GetOutPoints(userID)
 }
 
 func (serv *ServerStorage) FromDBToChannel(q *models.Queue) {
@@ -89,9 +107,13 @@ func (serv *ServerStorage) FromDBToChannel(q *models.Queue) {
 			q.Push(models.Task{})
 			return
 		case <-ticker.C:
-			items, err := serv.ds.GetNewOrders()
+			items, err := serv.sd.data.GetNewOrders()
 			if err != nil {
-				panic(err)
+				serv.sl.Infoln(
+					"time", time.Now(),
+					"error", "Error with FromDBChannel",
+				)
+				continue
 			}
 			for _, elem := range items {
 				q.Push(elem)
@@ -117,9 +139,13 @@ func (serv *ServerStorage) FromChannelToDB(q *models.Queue) {
 			if len(values) == 0 {
 				continue
 			}
-			err := serv.ds.UpdateOrders(values)
+			err := serv.sd.data.UpdateOrders(values)
 			if err != nil {
-				panic(err)
+				serv.sl.Infoln(
+					"time", time.Now(),
+					"error", "Error with FromChannelToDB",
+				)
+				continue
 			}
 			values = nil
 		}
