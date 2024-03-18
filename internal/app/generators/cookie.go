@@ -1,22 +1,11 @@
-package tools
+package generators
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	rb "crypto/rand"
 	"encoding/base64"
 	"strconv"
 )
-
-func GenerateCrypto(size int) ([]byte, error) {
-	b := make([]byte, size)
-	_, err := rb.Read(b)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
 
 func GenerateCookie(value int) (string, error) {
 	key, err := GenerateCrypto(aes.BlockSize)

@@ -14,7 +14,7 @@ func CheckCookie(next http.HandlerFunc, hs handlers.HStorage) http.HandlerFunc {
 			return
 		}
 
-		flag, err := hs.CheckCookie(cookie.Value)
+		flag, err := hs.CheckUserCookie(cookie.Value)
 		if err != nil {
 			http.Error(w, "Something bad with check cookie", http.StatusInternalServerError)
 			return

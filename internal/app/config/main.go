@@ -53,5 +53,4 @@ func (sa *ServerConfig) ParseFlags() {
 	if envAccSysAddr, in := os.LookupEnv("ACCRUAL_SYSTEM_ADDRESS"); in {
 		sa.SetAccSysAddr(envAccSysAddr)
 	}
-
 }
