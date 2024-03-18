@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"go.uber.org/zap"
 
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/accrual"
@@ -10,7 +11,8 @@ import (
 )
 
 type Storage struct {
-	dbs    database.DB
+	dbs    database.DBStorage
+	db     *sql.DB
 	sl     zap.SugaredLogger
 	fromDB chan models.Task
 	toDB   chan models.Task
@@ -18,14 +20,12 @@ type Storage struct {
 	cancel context.CancelFunc
 }
 
-func (serv *Storage) Init(DBURI string, AccSysAddr string) error {
-	db := database.DBStorage{Address: DBURI}
+func (serv *Storage) Init(db *sql.DB, AccSysAddr string) error {
+	serv.db = db
 
-	if err := db.MakeDB(); err != nil {
+	if err := serv.dbs.MakeDB(serv.db); err != nil {
 		return err
 	}
-
-	serv.dbs = database.DB{Data: &db}
 
 	serv.ctx, serv.cancel = context.WithCancel(context.Background())
 

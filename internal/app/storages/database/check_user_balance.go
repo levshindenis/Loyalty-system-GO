@@ -6,18 +6,12 @@ import (
 	"time"
 )
 
-func (dbs *DBStorage) CheckUserBalance(userID string, orderID string, orderSum float64) (bool, error) {
-	db, err := sql.Open("pgx", dbs.GetAddress())
-	if err != nil {
-		return false, err
-	}
-	defer db.Close()
-
+func (dbs *DBStorage) CheckUserBalance(db *sql.DB, userID string, orderID string, orderSum float64) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var balance float64
-	err = db.QueryRowContext(ctx,
+	err := db.QueryRowContext(ctx,
 		`SELECT balance FROM balances WHERE user_id = $1`, userID).Scan(&balance)
 	if err != nil {
 		return false, err

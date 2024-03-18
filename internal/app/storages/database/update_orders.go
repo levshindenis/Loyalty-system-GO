@@ -8,13 +8,7 @@ import (
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 )
 
-func (dbs *DBStorage) UpdateOrders(tasks []models.Task) error {
-	db, err := sql.Open("pgx", dbs.GetAddress())
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
+func (dbs *DBStorage) UpdateOrders(db *sql.DB, tasks []models.Task) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

@@ -9,18 +9,12 @@ import (
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/generators"
 )
 
-func (dbs *DBStorage) CheckUser(login string, password string, param string) (bool, string, error) {
-	db, err := sql.Open("pgx", dbs.GetAddress())
-	if err != nil {
-		return false, "", err
-	}
-	defer db.Close()
-
+func (dbs *DBStorage) CheckUser(db *sql.DB, login string, password string, param string) (bool, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var userID, pswrd string
-	err = db.QueryRowContext(ctx,
+	err := db.QueryRowContext(ctx,
 		`SELECT user_id, password FROM users WHERE login = $1`, login).Scan(&userID, &pswrd)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/config"
@@ -15,10 +16,16 @@ func main() {
 	)
 
 	sc.ParseFlags()
-	if err := hs.Init(sc.GetDBURI(), sc.GetAccSysAddr()); err != nil {
+	db, err := sql.Open("pgx", sc.GetDBURI())
+	if err != nil {
 		panic(err)
 	}
-	if err := http.ListenAndServe(sc.GetRunAddress(), router.Router(hs)); err != nil {
+	defer db.Close()
+
+	if err = hs.Init(db, sc.GetAccSysAddr()); err != nil {
+		panic(err)
+	}
+	if err = http.ListenAndServe(sc.GetRunAddress(), router.Router(hs)); err != nil {
 		panic(err)
 	}
 	hs.Terminate()

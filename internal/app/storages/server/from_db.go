@@ -16,7 +16,7 @@ func (serv *Storage) FromDBToChannel(q chan models.Task, ctx context.Context) {
 			q <- models.Task{}
 			return
 		case <-ticker.C:
-			items, err := serv.dbs.GetData().GetNewOrders()
+			items, err := serv.dbs.GetNewOrders(serv.db)
 			if err != nil {
 				serv.sl.Infoln(
 					"time", time.Now(),

@@ -6,17 +6,11 @@ import (
 	"time"
 )
 
-func (dbs *DBStorage) MakeDB() error {
-	db, err := sql.Open("pgx", dbs.GetAddress())
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
+func (dbs *DBStorage) MakeDB(db *sql.DB) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = db.ExecContext(ctx,
+	_, err := db.ExecContext(ctx,
 		`CREATE TABLE IF NOT EXISTS users(user_id text, login text, password text)`)
 	if err != nil {
 		return err

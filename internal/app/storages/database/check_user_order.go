@@ -7,18 +7,12 @@ import (
 	"time"
 )
 
-func (dbs *DBStorage) CheckUserOrder(orderID string, userID string) (bool, bool, error) {
-	db, err := sql.Open("pgx", dbs.GetAddress())
-	if err != nil {
-		return false, false, err
-	}
-	defer db.Close()
-
+func (dbs *DBStorage) CheckUserOrder(db *sql.DB, orderID string, userID string) (bool, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var uid string
-	err = db.QueryRowContext(ctx,
+	err := db.QueryRowContext(ctx,
 		`SELECT user_id FROM orders WHERE order_id = $1`, orderID).Scan(&uid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
