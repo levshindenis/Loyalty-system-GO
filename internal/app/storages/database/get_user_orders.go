@@ -2,17 +2,16 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/models"
 )
 
-func (dbs *DBStorage) GetUserOrders(db *sql.DB, userID string) (bool, []models.Order, error) {
+func (dbs *DBStorage) GetUserOrders(userID string) (bool, []models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rows, err := db.QueryContext(ctx,
+	rows, err := dbs.DB.QueryContext(ctx,
 		`SELECT order_id, status, accrual, uploaded_at FROM orders 
             WHERE user_id = $1 and status <> 'SOLD' order by uploaded_at desc`,
 		userID)

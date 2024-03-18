@@ -12,7 +12,6 @@ import (
 
 type Storage struct {
 	dbs    database.DBStorage
-	db     *sql.DB
 	sl     zap.SugaredLogger
 	fromDB chan models.Task
 	toDB   chan models.Task
@@ -21,9 +20,9 @@ type Storage struct {
 }
 
 func (serv *Storage) Init(db *sql.DB, AccSysAddr string) error {
-	serv.db = db
+	serv.dbs = database.DBStorage{DB: db}
 
-	if err := serv.dbs.MakeDB(serv.db); err != nil {
+	if err := serv.dbs.MakeDB(); err != nil {
 		return err
 	}
 

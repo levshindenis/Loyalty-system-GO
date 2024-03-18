@@ -2,16 +2,15 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
-func (dbs *DBStorage) CheckUserBalance(db *sql.DB, userID string, orderID string, orderSum float64) (bool, error) {
+func (dbs *DBStorage) CheckUserBalance(userID string, orderID string, orderSum float64) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var balance float64
-	err := db.QueryRowContext(ctx,
+	err := dbs.DB.QueryRowContext(ctx,
 		`SELECT balance FROM balances WHERE user_id = $1`, userID).Scan(&balance)
 	if err != nil {
 		return false, err
@@ -21,7 +20,7 @@ func (dbs *DBStorage) CheckUserBalance(db *sql.DB, userID string, orderID string
 		return false, nil
 	}
 
-	tx, err := db.Begin()
+	tx, err := dbs.DB.Begin()
 	if err != nil {
 		return false, err
 	}

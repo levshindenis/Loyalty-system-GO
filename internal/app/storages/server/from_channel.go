@@ -23,7 +23,7 @@ func (serv *Storage) FromChannelToDB(q chan models.Task, ctx context.Context) {
 			if len(values) == 0 {
 				continue
 			}
-			err := serv.dbs.UpdateOrders(serv.db, values)
+			err := serv.dbs.UpdateOrders(values)
 			if err != nil {
 				serv.sl.Infoln(
 					"time", time.Now(),

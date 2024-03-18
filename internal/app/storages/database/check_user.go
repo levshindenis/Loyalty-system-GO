@@ -9,18 +9,18 @@ import (
 	"github.com/levshindenis/Loyalty-system-GO/internal/app/generators"
 )
 
-func (dbs *DBStorage) CheckUser(db *sql.DB, login string, password string, param string) (bool, string, error) {
+func (dbs *DBStorage) CheckUser(login string, password string, param string) (bool, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var userID, pswrd string
-	err := db.QueryRowContext(ctx,
+	err := dbs.DB.QueryRowContext(ctx,
 		`SELECT user_id, password FROM users WHERE login = $1`, login).Scan(&userID, &pswrd)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			if param == "registration" {
 				var counter int
-				err = db.QueryRowContext(ctx, `SELECT count(*) FROM users`).Scan(&counter)
+				err = dbs.DB.QueryRowContext(ctx, `SELECT count(*) FROM users`).Scan(&counter)
 				if err != nil {
 					return false, "", err
 				}
@@ -30,7 +30,7 @@ func (dbs *DBStorage) CheckUser(db *sql.DB, login string, password string, param
 					return false, "", err
 				}
 
-				tx, err := db.Begin()
+				tx, err := dbs.DB.Begin()
 				if err != nil {
 					return false, "", err
 				}
