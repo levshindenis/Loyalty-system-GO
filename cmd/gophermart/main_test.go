@@ -92,6 +92,10 @@ func TestMain(m *testing.M) {
 	exitVal := m.Run()
 
 	tx, err = db.Begin()
+	if err != nil {
+		log.Fatal("Error with Begin")
+	}
+
 	_, err = tx.ExecContext(ctx,
 		`DELETE from orders where user_id = $1`, "abc")
 	if err != nil {
